@@ -1,0 +1,41 @@
+# Railway ignore file
+# Files and directories to exclude from Railway deployment
+
+# Development files
+*.md
+.git/
+.gitignore
+README.md
+
+# Local development
+docker-compose.yml
+docker-compose.override.yml
+
+# Logs and temporary files
+logs/
+*.log
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Python cache (if any)
+__pycache__/
+*.pyc
+*.pyo
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js

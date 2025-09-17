@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # NebulaGraph Meta Service
+  nebula-metad:
+    image: vesoft/nebula-metad:latest
+    container_name: nebula-metad
+    ports:
+      - "9559:9559"
+    volumes:
+      - ./config/metad.conf:/usr/local/nebula/etc/metad.conf
+      - ./data/meta:/data
+      - ./logs/meta:/logs
+    environment:
+      - NEBULA_META_SERVER_ADDRS=127.0.0.1:9559
+    command: ["/usr/local/nebula/bin/nebula-metad", "--flagfile=/usr/local/nebula/etc/metad.conf"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9559/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NebulaGraph Storage Service
+  nebula-storaged:
+    image: vesoft/nebula-storaged:latest
+    container_name: nebula-storaged
+    ports:
+      - "9779:9779"
+    volumes:
+      - ./config/storaged.conf:/usr/local/nebula/etc/storaged.conf
+      - ./data/storage:/data
+      - ./logs/storage:/logs
+    environment:
+      - NEBULA_META_SERVER_ADDRS=nebula-metad:9559
+    depends_on:
+      nebula-metad:
+        condition: service_healthy
+    command: ["/usr/local/nebula/bin/nebula-storaged", "--flagfile=/usr/local/nebula/etc/storaged.conf"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9779/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NebulaGraph Graph Service
+  nebula-graphd:
+    image: vesoft/nebula-graphd:latest
+    container_name: nebula-graphd
+    ports:
+      - "9669:9669"
+      - "19669:19669"
+    volumes:
+      - ./config/graphd.conf:/usr/local/nebula/etc/graphd.conf
+      - ./logs/graph:/logs
+    environment:
+      - NEBULA_META_SERVER_ADDRS=nebula-metad:9559
+    depends_on:
+      nebula-metad:
+        condition: service_healthy
+      nebula-storaged:
+        condition: service_healthy
+    command: ["/usr/local/nebula/bin/nebula-graphd", "--flagfile=/usr/local/nebula/etc/graphd.conf"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19669/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NebulaGraph Studio (Web UI)
+  nebula-studio:
+    image: vesoft/nebula-graph-studio:latest
+    container_name: nebula-studio
+    ports:
+      - "7001:7001"
+    environment:
+      - NEBULA_HOST=nebula-graphd
+      - NEBULA_PORT=9669
+      - NEBULA_USER=root
+      - NEBULA_PASSWORD=nebula
+    depends_on:
+      nebula-graphd:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  nebula-data:
+  nebula-logs:
