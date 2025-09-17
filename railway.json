@@ -5,9 +5,9 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "/usr/local/nebula/bin/nebula-graphd --flagfile=/usr/local/nebula/etc/graphd.conf",
+    "startCommand": "/usr/local/bin/start.sh",
     "healthcheckPath": "/status",
-    "healthcheckTimeout": 100,
+    "healthcheckTimeout": 200,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
