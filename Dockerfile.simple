@@ -1,7 +1,8 @@
 # Simplified Dockerfile for NebulaGraph Railway deployment
 FROM vesoft/nebula-graphd:latest
 
-# Note: curl is not available in this image, we'll use wget or skip healthcheck
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /usr/local/nebula
@@ -16,9 +17,9 @@ RUN mkdir -p /data /logs
 # Expose ports
 EXPOSE 9669 19669
 
-# Health check - simple process check
+# Health check - simplified
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD pgrep nebula-graphd || exit 1
+  CMD curl -f http://localhost:19669/status || exit 1
 
 # Start NebulaGraph GraphD only (for testing)
 CMD ["/usr/local/nebula/bin/nebula-graphd", "--flagfile=/usr/local/nebula/etc/graphd.conf"]
